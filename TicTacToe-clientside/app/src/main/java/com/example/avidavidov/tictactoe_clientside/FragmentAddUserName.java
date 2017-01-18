@@ -1,6 +1,7 @@
 package com.example.avidavidov.tictactoe_clientside;
 
 import android.app.DialogFragment;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -27,6 +28,7 @@ public class FragmentAddUserName extends DialogFragment {
 
     EditText txtuserName, txtpassword;
     Button btnAddUser, btnLogin;
+    String action;
 
     @Nullable
     @Override
@@ -48,8 +50,8 @@ public class FragmentAddUserName extends DialogFragment {
                 }
 
                 String password = txtpassword.getText().toString();
-                String userName = txtuserName.getText().toString();
-                String action = v.getTag().toString();
+                final String userName = txtuserName.getText().toString();
+                final String action = v.getTag().toString();
 
                 if (userName.isEmpty() || userName.length() < 3) {
                     Toast.makeText(getActivity(), "Pleser enter valid User name (Min. 3 chars)", Toast.LENGTH_SHORT).show();
@@ -62,61 +64,86 @@ public class FragmentAddUserName extends DialogFragment {
                 btnAddUser.setClickable(false);
                 btnLogin.setClickable(false);
 
-                String result = "";
-                HttpURLConnection urlConnection = null;
-                InputStream inputStream = null;
-
-                try {
-                    URL url = new URL(MainActivity.BASE_URL + "?action=" + action
-                            + "&userName=" + userName
-                            + "&password=" + password);
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("GET");
-                    urlConnection.setUseCaches(false);
-                    urlConnection.connect();
-
-                    inputStream = urlConnection.getInputStream();
-                    byte[] buffer = new byte[64];
-                    int actuallyRead;
-                    while ((actuallyRead = inputStream.read(buffer)) != -1)
-                        result = new String(buffer, 0, actuallyRead);
-                    inputStream.close();
+                new AsyncTask<String, Void, String>() {
 
 
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (ProtocolException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    if (inputStream != null)
+                    @Override
+                    protected String doInBackground(String... params) {
+
+                        String userName = params[0];
+                        String password = params[1];
+                        String action = params[2];
+                        String result = "";
+                        HttpURLConnection urlConnection = null;
+                        InputStream inputStream = null;
+
                         try {
+                            URL url = new URL(MainActivity.BASE_URL + "?action=" + action
+                                    + "&userName=" + userName
+                                    + "&password=" + password);
+                            urlConnection = (HttpURLConnection) url.openConnection();
+                            urlConnection.setRequestMethod("GET");
+                            urlConnection.setUseCaches(false);
+                            urlConnection.connect();
+
+                            inputStream = urlConnection.getInputStream();
+                            byte[] buffer = new byte[64];
+                            int actuallyRead;
+                            while ((actuallyRead = inputStream.read(buffer)) != -1)
+                                result = new String(buffer, 0, actuallyRead);
                             inputStream.close();
+
+
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        } catch (ProtocolException e) {
+                            e.printStackTrace();
                         } catch (IOException e) {
                             e.printStackTrace();
+                        } finally {
+                            if (inputStream != null)
+                                try {
+                                    inputStream.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            if (urlConnection != null)
+                                urlConnection.disconnect();
                         }
-                    if (urlConnection != null)
-                        urlConnection.disconnect();
-                }
-                if (result == "OK") {
-                    switch (action) {
-                        case "signUp":
-                            Toast.makeText(getActivity(), "User added", Toast.LENGTH_SHORT).show();
-                            break;
-                        case "login":
-                            Toast.makeText(getActivity(), "Login success", Toast.LENGTH_SHORT).show();
-                            break;
+
+                        String[] resultArray = new String[2];
+                        resultArray[0] = result;
+
+                        return result + "&" + action;
 
                     }
-                    dismiss();
-                } else {
 
-                    Toast.makeText(getActivity(), "Login/Add user failed", Toast.LENGTH_SHORT).show();
-                }
-                btnAddUser.setClickable(true);
-                btnLogin.setClickable(true);
+                    @Override
+                    protected void onPostExecute(String resultArray) {
 
+                        String[] resultAndAction = resultArray.split("&");
+                        String result = resultAndAction[0];
+                        String action = resultAndAction[1];
+
+                        if (result.equals("ok")) {
+                            switch (action) {
+                                case "signUp":
+                                    Toast.makeText(getActivity(), "User added", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case "login":
+                                    Toast.makeText(getActivity(), "Login success", Toast.LENGTH_SHORT).show();
+                                    break;
+                            }
+                            dismiss();
+                        } else {
+                            Toast.makeText(getActivity(), "Login/Add user failed", Toast.LENGTH_SHORT).show();
+                            btnAddUser.setClickable(true);
+                            btnLogin.setClickable(true);
+
+                        }
+
+                    }
+                }.execute(userName, password, action);
             }
         };
 

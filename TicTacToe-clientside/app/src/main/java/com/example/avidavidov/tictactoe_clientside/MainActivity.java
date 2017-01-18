@@ -20,7 +20,7 @@ public class MainActivity extends Activity {
     FragmentManager fragmentManager = getFragmentManager();
     FragmentAddUserName userDialog;
     Handler handler;
-    //public static final String BASE_URL = "http://104.155.154.50/TicTacToeServlet";
+    //public static final String BASE_URL = "http://104.198.183.172/TicTacToeServlet";
     public static final String BASE_URL = "http://10.0.2.2:8080/TicTacToeServlet";
 
     boolean isOnGame;
@@ -35,11 +35,11 @@ public class MainActivity extends Activity {
         userDialog.setCancelable(false);
         userDialog.show(fragmentManager, "Add user / Login");
 
-//        while (!isOnGame) {
-//
-//            handler = new Handler();
-//            handler.post(new CheckAvalableUsersThread());
-//        }
+        while (!isOnGame) {
+
+            handler = new Handler();
+            handler.post(new CheckAvalableUsersThread());
+        }
 
     }
 }

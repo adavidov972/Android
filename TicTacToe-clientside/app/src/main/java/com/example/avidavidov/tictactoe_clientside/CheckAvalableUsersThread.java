@@ -46,5 +46,10 @@ public class CheckAvalableUsersThread extends Thread {
             e.printStackTrace();
         }
 
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
