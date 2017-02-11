@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -22,13 +21,17 @@ import java.net.URL;
  * Created by avi.davidov on 05/01/2017.
  */
 
-public class FragmentAddUserName extends DialogFragment {
-
-    //public static final String BASE_URL = "http://104.155.154.50/TicTacToeServlet";
+public class FragmentAddUserOrLogin extends DialogFragment {
 
     EditText txtuserName, txtpassword;
     Button btnAddUser, btnLogin;
-    String action;
+    String userName, password;
+    OnLoggingInListiner listiner;
+
+
+    public void setListiner(OnLoggingInListiner listiner) {
+        this.listiner = listiner;
+    }
 
     @Nullable
     @Override
@@ -46,12 +49,12 @@ public class FragmentAddUserName extends DialogFragment {
             public void onClick(View v) {
 
                 if (txtuserName == null || txtpassword == null) {
-                    Toast.makeText(getActivity(), "Please ent user name and password", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Please enter user name and password", Toast.LENGTH_SHORT).show();
                 }
 
-                String password = txtpassword.getText().toString();
-                final String userName = txtuserName.getText().toString();
-                final String action = v.getTag().toString();
+                password = txtpassword.getText().toString();
+                userName = txtuserName.getText().toString();
+                String action = v.getTag().toString();
 
                 if (userName.isEmpty() || userName.length() < 3) {
                     Toast.makeText(getActivity(), "Pleser enter valid User name (Min. 3 chars)", Toast.LENGTH_SHORT).show();
@@ -65,7 +68,6 @@ public class FragmentAddUserName extends DialogFragment {
                 btnLogin.setClickable(false);
 
                 new AsyncTask<String, Void, String>() {
-
 
                     @Override
                     protected String doInBackground(String... params) {
@@ -134,19 +136,20 @@ public class FragmentAddUserName extends DialogFragment {
                                     Toast.makeText(getActivity(), "Login success", Toast.LENGTH_SHORT).show();
                                     break;
                             }
+                            if (listiner != null)
+                                listiner.onLoggingIn(userName, password);
                             dismiss();
+
                         } else {
                             Toast.makeText(getActivity(), "Login/Add user failed", Toast.LENGTH_SHORT).show();
-                            btnAddUser.setClickable(true);
-                            btnLogin.setClickable(true);
 
                         }
-
+                        btnAddUser.setClickable(true);
+                        btnLogin.setClickable(true);
                     }
                 }.execute(userName, password, action);
             }
         };
-
 
         btnAddUser.setOnClickListener(userFragmrntBtnListiner);
         btnLogin.setOnClickListener(userFragmrntBtnListiner);
@@ -154,4 +157,10 @@ public class FragmentAddUserName extends DialogFragment {
         return view;
 
     }
+
+
+    interface OnLoggingInListiner {
+        public void onLoggingIn(String userName, String password);
+    }
+
 }
