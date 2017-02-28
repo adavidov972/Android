@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,19 +14,16 @@ import java.util.List;
 
 public class CheckAvalableUsersThread extends Thread {
 
-    List <Users> avalableUsers = null;
+    List<Users> avalableUsers = null;
     OnChangeUserListListiner userListListiner;
     boolean go = true;
     String userName, password;
     FragmentAddUserOrLogin fragmentAddUserOrLogin;
+    int clientCounter;
 
     public CheckAvalableUsersThread(String userName, String password) {
         this.userName = userName;
         this.password = password;
-    }
-
-    public CheckAvalableUsersThread (){
-
     }
 
     public void setUserListListiner(OnChangeUserListListiner userListListiner) {
@@ -38,30 +34,38 @@ public class CheckAvalableUsersThread extends Thread {
     public void run() {
 
         while (go) {
-
+            HttpURLConnection connection=null;
+            InputStream inputStream = null;
             try {
 
                 //URL url = new URL("http://10.0.2.2:8080/TicTacToeServlet?action=check&userName=avi&password=1234");
-                URL url = new URL(MainActivity.BASE_URL + "?action=check&userName=" + userName + "&password=" + password);
-                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.setUseCaches(false);
-                urlConnection.connect();
+                URL url = new URL(MainActivity.BASE_URL + "?action=check&userName=" + userName + "&password=" + password
+                        +"&counter="+clientCounter);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setUseCaches(false);
+                connection.connect();
 
-                InputStream inputStream = urlConnection.getInputStream();
+                inputStream = connection.getInputStream();
                 byte[] buffer = new byte[512];
                 int actuallyRead;
                 StringBuilder stringBuilder = new StringBuilder();
                 while ((actuallyRead = inputStream.read(buffer)) != -1)
                     stringBuilder.append(new String(buffer, 0, actuallyRead));
-                if (stringBuilder.length() != 0) {
-                    String [] usersArray = stringBuilder.toString().split("&");
+                String result = stringBuilder.toString();
+                inputStream.close();
+                connection.disconnect();
+                if (!result.equals("no change")) {
+                    String [] usersAndCounterArray = result.split("~");
+                    String[] usersArray = usersAndCounterArray[0].split("&");
+                    int currentCounter = Integer.valueOf(usersAndCounterArray[1]);
+                    clientCounter = currentCounter;
                     avalableUsers = new ArrayList<Users>();
                     for (int i = 0; i < usersArray.length; i++) {
-                        avalableUsers.add(new Users(usersArray[i],null));
+                        avalableUsers.add(new Users(usersArray[i], null));
                     }
-                        if (userListListiner != null)
-                            userListListiner.OnChangeUserList(avalableUsers);
+                    if (userListListiner != null)
+                        userListListiner.OnChangeUserList(avalableUsers);
                 }
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -73,21 +77,33 @@ public class CheckAvalableUsersThread extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            finally {
+                if (inputStream != null)
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                if (connection != null)
+                    connection.disconnect();
+            }
         }
     }
 
-    public void stopThread () {
-        go=false;
+    public void stopThread() {
+        go = false;
     }
 
-    public void startThread () {
-        go=true;
+    public void startThread() {
+        go = true;
+    }
+
+    interface OnChangeUserListListiner {
+
+        public void OnChangeUserList(List<Users> avalableUsers);
     }
 
 }
 
-interface OnChangeUserListListiner {
 
-    public void OnChangeUserList(List <Users> avalableUsers);
-}
 

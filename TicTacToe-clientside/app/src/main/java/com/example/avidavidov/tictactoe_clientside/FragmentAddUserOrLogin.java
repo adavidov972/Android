@@ -1,6 +1,9 @@
 package com.example.avidavidov.tictactoe_clientside;
 
+import android.app.Activity;
 import android.app.DialogFragment;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -10,12 +13,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+
+import static android.content.Context.MODE_PRIVATE;
 
 /**
  * Created by avi.davidov on 05/01/2017.
@@ -33,16 +39,24 @@ public class FragmentAddUserOrLogin extends DialogFragment {
         this.listiner = listiner;
     }
 
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
     @Nullable
     @Override
-    public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_username, container);
-
         txtuserName = (EditText) view.findViewById(R.id.txtuserName);
         txtpassword = (EditText) view.findViewById(R.id.txtPassword);
         btnAddUser = (Button) view.findViewById(R.id.btnAddUser);
         btnLogin = (Button) view.findViewById(R.id.btnLogin);
+
 
         View.OnClickListener userFragmrntBtnListiner = new View.OnClickListener() {
             @Override
@@ -155,7 +169,6 @@ public class FragmentAddUserOrLogin extends DialogFragment {
         btnLogin.setOnClickListener(userFragmrntBtnListiner);
 
         return view;
-
     }
 
 
