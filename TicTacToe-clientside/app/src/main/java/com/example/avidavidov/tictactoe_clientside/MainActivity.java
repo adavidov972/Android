@@ -7,14 +7,19 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.TextView;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends Activity implements FragmentAddUserOrLogin.OnLoggingInListiner {
 
     //public static final String BASE_URL = "http://104.198.183.172/TicTacToeServlet";
-    public static final String BASE_URL = "http://10.100.102.20:8080/TicTacToeServlet";
+    public static final String BASE_URL = "http://10.0.2.2:8080/TicTacToeServlet";
     public static final String USER_NAME = "userName";
     public static final String PASSWORD = "password";
     public static final int RESULT_OK = 1;
+    public static final String GAMENUMBER = "GAMENUMBER";
     public static final String USERPICKED = "USERPICKED";
     public static final String X_PLAYER = "xPlayer";
     public static final String CRCL_PLAYER = "crclPlayer";
@@ -23,7 +28,6 @@ public class MainActivity extends Activity implements FragmentAddUserOrLogin.OnL
     FragmentAddUserOrLogin userDialog;
     boolean isOnGame = false;
     SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
     TextView lblWelcome;
 
 
@@ -34,8 +38,6 @@ public class MainActivity extends Activity implements FragmentAddUserOrLogin.OnL
 
         lblWelcome = (TextView) findViewById(R.id.lblwelcome);
         sharedPreferences = getSharedPreferences(USER_NAME_PREF, MODE_PRIVATE);
-        editor = sharedPreferences.edit();
-
 
         if (sharedPreferences.getString(USER_NAME,null) != null) {
             String userName = sharedPreferences.getString(USER_NAME, null);
@@ -48,9 +50,6 @@ public class MainActivity extends Activity implements FragmentAddUserOrLogin.OnL
             userDialog.setCancelable(false);
             userDialog.setListiner(this);
             userDialog.show(fragmentManager, "Add user / Login");
-            editor.putString(USER_NAME,userDialog.getUserName());
-            editor.putString(PASSWORD,userDialog.getPassword());
-            editor.commit();
             lblWelcome.setText(userDialog.getUserName());
         }
     }
@@ -63,11 +62,13 @@ public class MainActivity extends Activity implements FragmentAddUserOrLogin.OnL
             String userName = data.getStringExtra(USER_NAME);
             String password = data.getStringExtra(PASSWORD);
             String userPicked = data.getStringExtra(USERPICKED);
+            int gameNumber = data.getIntExtra(GAMENUMBER,-1);
 
             Intent gameIntent = new Intent(this, Game_Activity.class);
             gameIntent.putExtra(X_PLAYER, userName);
             gameIntent.putExtra(CRCL_PLAYER, userPicked);
             gameIntent.putExtra(USER_NAME, userName);
+            gameIntent.putExtra(GAMENUMBER,gameNumber);
             startActivityForResult(gameIntent, RESULT_OK);
         }
     }
@@ -76,9 +77,14 @@ public class MainActivity extends Activity implements FragmentAddUserOrLogin.OnL
     public void onLoggingIn(String userName, String password) {
 
         Intent intent = new Intent(this, UserPickActivity.class);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(USER_NAME,userName);
+        editor.putString(PASSWORD,password);
+        editor.commit();
         intent.putExtra(USER_NAME, userName);
         intent.putExtra(PASSWORD, password);
         startActivityForResult(intent, RESULT_OK);
+
     }
 
 }

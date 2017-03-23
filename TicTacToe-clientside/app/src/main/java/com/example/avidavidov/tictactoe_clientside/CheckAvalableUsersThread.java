@@ -45,7 +45,6 @@ public class CheckAvalableUsersThread extends Thread {
                 connection.setRequestMethod("GET");
                 connection.setUseCaches(false);
                 connection.connect();
-
                 inputStream = connection.getInputStream();
                 byte[] buffer = new byte[512];
                 int actuallyRead;
@@ -55,6 +54,7 @@ public class CheckAvalableUsersThread extends Thread {
                 String result = stringBuilder.toString();
                 inputStream.close();
                 connection.disconnect();
+
                 if (!result.equals("no change")) {
                     String [] usersAndCounterArray = result.split("~");
                     String[] usersArray = usersAndCounterArray[0].split("&");
@@ -75,7 +75,6 @@ public class CheckAvalableUsersThread extends Thread {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
             }
             finally {
                 if (inputStream != null)

@@ -11,32 +11,37 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserPickActivity extends Activity implements CheckAvalableUsersThread.OnChangeUserListListiner, IfPickedMeThread.OnPickingMeListiner {
+
+public class UserPickActivity extends Activity implements CheckAvalableUsersThread.OnChangeUserListListiner, IfPickedMeThread.OnPickingMeListiner,
+        FragmentSomeonePickedYou.OnUserApprovedListiner {
     private ListView usersListView;
     private UserListAdapter userAdapter;
     private List<Users> avalableUsers;
-    private String userName, password;
-    private String pickedUserName;
+    private String userName, password, pickingResult;
+    private String userPicked;
     private CheckAvalableUsersThread checkAvalableThread;
     private IfPickedMeThread ifPickedMeThread;
     private FragmentPleaseWait pleaseWaitDialog;
     private FragmentSomeonePickedYou pickedDialog;
     TextView lblConnectedAs;
+    private Button btnSwitchUser;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_pick);
         lblConnectedAs = (TextView) findViewById(R.id.lblConnectedAs);
+        btnSwitchUser = (Button) findViewById(R.id.btnSwitchUser);
 
         Intent intent = getIntent();
         if (intent.getStringExtra(MainActivity.USER_NAME) != null)
@@ -44,7 +49,7 @@ public class UserPickActivity extends Activity implements CheckAvalableUsersThre
         if (intent.getStringExtra(MainActivity.PASSWORD) != null)
             password = intent.getStringExtra(MainActivity.PASSWORD);
 
-        lblConnectedAs.setText("Connected as user name : "+userName);
+        lblConnectedAs.setText("Connected as : " + userName);
         startCheckAvalableThread();
         startIfPickedMeThread();
 
@@ -55,17 +60,19 @@ public class UserPickActivity extends Activity implements CheckAvalableUsersThre
 
         usersListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(final AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                stopIfPickedMeThread();
+                stopCheckAvalableThread();
                 FragmentManager waitFragmentManager = getFragmentManager();
                 pleaseWaitDialog = new FragmentPleaseWait();
                 pleaseWaitDialog.setCancelable(false);
                 pleaseWaitDialog.show(waitFragmentManager, null);
-                pickedUserName = avalableUsers.get(position).getUserName().toString();
+                userPicked = avalableUsers.get(position).getUserName().toString();
 
                 new AsyncTask<String, Void, String>() {
 
                     InputStream inputStream = null;
-                    String result = "";
+                    String resultArray = "";
 
                     @Override
                     protected String doInBackground(String... params) {
@@ -86,7 +93,7 @@ public class UserPickActivity extends Activity implements CheckAvalableUsersThre
                             byte[] buffer = new byte[32];
                             int actuallyRead;
                             while ((actuallyRead = inputStream.read(buffer)) != -1)
-                                result = new String(buffer, 0, actuallyRead);
+                                resultArray = new String(buffer, 0, actuallyRead);
 
                         } catch (MalformedURLException e) {
                             e.printStackTrace();
@@ -94,18 +101,39 @@ public class UserPickActivity extends Activity implements CheckAvalableUsersThre
                             e.printStackTrace();
                         }
 
-                        return result;
+                        return resultArray;
                     }
 
                     @Override
-                    protected void onPostExecute(String result) {
-                        if (result.equals("ok&" + pickedUserName)) {
+                    protected void onPostExecute(String resultArray) {
+                        String[] resultWithGameNumber = resultArray.split("~");
+                        final String result = resultWithGameNumber[0];
+                        final int gameNumber = Integer.valueOf(resultWithGameNumber[1]);
+                        if (result.equals("ok&" + userPicked)) {
                             checkAvalableThread.stopThread();
+                            ifPickedMeThread.stopThread();
+
+                            new AsyncTask<String, Void, String>() {
+                                @Override
+                                protected String doInBackground(String... params) {
+
+                                    params[0] = userName;
+                                    params[1] = userPicked;
+                                    params[2] = String.valueOf(gameNumber);
+
+
+                                              return result;
+                                }
+
+                            }.execute(userName, userPicked, String.valueOf(gameNumber));
+
+
                             pleaseWaitDialog.dismiss();
                             Intent data = new Intent();
                             data.putExtra(MainActivity.USER_NAME, userName);
                             data.putExtra(MainActivity.PASSWORD, password);
-                            data.putExtra(MainActivity.USERPICKED, pickedUserName);
+                            data.putExtra(MainActivity.USERPICKED, userPicked);
+                            data.putExtra(MainActivity.GAMENUMBER, gameNumber);
                             setResult(RESULT_OK, data);
                             finish();
                         } else {
@@ -114,7 +142,7 @@ public class UserPickActivity extends Activity implements CheckAvalableUsersThre
 
                         }
                     }
-                }.execute(userName, password, pickedUserName);
+                }.execute(userName, password, userPicked);
             }
         });
     }
@@ -125,7 +153,7 @@ public class UserPickActivity extends Activity implements CheckAvalableUsersThre
         checkAvalableThread.start();
     }
 
-    private void stopCheckAvalableThread (){
+    private void stopCheckAvalableThread() {
         checkAvalableThread.interrupt();
         checkAvalableThread.stopThread();
     }
@@ -136,7 +164,7 @@ public class UserPickActivity extends Activity implements CheckAvalableUsersThre
         ifPickedMeThread.start();
     }
 
-    private void stopIfPickedMeThread (){
+    private void stopIfPickedMeThread() {
         ifPickedMeThread.interrupt();
         ifPickedMeThread.stopThread();
     }
@@ -171,13 +199,35 @@ public class UserPickActivity extends Activity implements CheckAvalableUsersThre
     }
 
     @Override
-    public void onSomeonePickedMe(String userPicked) {
+    public void onSomeonePickedMe(String userPicked, int gameNumber) {
 
         FragmentManager youVPickedManager = getFragmentManager();
         pickedDialog = new FragmentSomeonePickedYou();
+        pickedDialog.setUserName(userName);
+        pickedDialog.setPassword(password);
         pickedDialog.setUserPicked(userPicked);
+        pickedDialog.setGameNumber(gameNumber);
         pickedDialog.show(youVPickedManager, null);
+
+        if (pickedDialog.isApproved) {
+
+        } else {
+            startCheckAvalableThread();
+            startIfPickedMeThread();
+        }
+
 
     }
 
+    @Override
+    public void onUserApproved(String userName, String userPicked, int gameNumber) {
+
+        Intent data = new Intent();
+        data.putExtra(MainActivity.USER_NAME, userName);
+        data.putExtra(MainActivity.PASSWORD, password);
+        data.putExtra(MainActivity.USERPICKED, userPicked);
+        data.putExtra(MainActivity.GAMENUMBER, gameNumber);
+        setResult(RESULT_OK, data);
+        finish();
+    }
 }

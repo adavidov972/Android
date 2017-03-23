@@ -16,7 +16,7 @@ public class IfPickedMeThread extends Thread {
     String userName;
     String password;
     OnPickingMeListiner listiner;
-    private boolean go=true;
+    private boolean go = true;
 
     public IfPickedMeThread(String userName, String password) {
         this.userName = userName;
@@ -49,20 +49,19 @@ public class IfPickedMeThread extends Thread {
                     answer = new String(buffer, 0, actuallyRead);
                 inputStream.close();
                 connection.disconnect();
-                String resultWithPicker[] = answer.split("&");
-                if (resultWithPicker.length==2) {
-                    String result = resultWithPicker[0];
-                    String userPicked = resultWithPicker[1];
+                String resultArray[] = answer.split("&");
+                if (resultArray.length == 3) {
+                    String result = resultArray[0];
+                    String userPicked = resultArray[1];
+                    int gameNumber = Integer.valueOf(resultArray [2]);
                     if (result.equals("ok"))
 
                         if (listiner != null) {
-                            listiner.onSomeonePickedMe(userPicked);
+                            listiner.onSomeonePickedMe(userPicked,gameNumber);
                         }
                 }
 
-            } catch (
-                    MalformedURLException e
-                    )
+            } catch (MalformedURLException e)
 
             {
                 e.printStackTrace();
@@ -81,19 +80,18 @@ public class IfPickedMeThread extends Thread {
                     connection.disconnect();
             }
             try {
-                Thread.sleep(8000);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }
     }
 
-    public void stopThread (){
-        go=false;
+    public void stopThread() {
+        go = false;
     }
 
     interface OnPickingMeListiner {
-        public void onSomeonePickedMe(String userPicked);
+        public void onSomeonePickedMe(String userPicked, int gameNumber);
     }
 }
 

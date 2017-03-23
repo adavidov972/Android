@@ -19,6 +19,10 @@ public class TicTacToe {
     private boolean isXturn;
     private int moveCount;
 
+    public CellValue[] getBoard() {
+        return board;
+    }
+
     public TicTacToe() {
         board = new CellValue[9];
         resetGame();
