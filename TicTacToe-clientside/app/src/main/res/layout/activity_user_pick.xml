@@ -40,10 +40,19 @@
         android:layout_height="wrap_content"
         android:id="@+id/btnSwitchUser"
         android:text="Switch user"
-        android:textAlignment="center"/>
+        android:textAlignment="center"
+        android:onClick="btnSwitchUser"/>
 
     <TextView
         android:id="@+id/lblConnectedAs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/lblNoNetwork"
+        android:text="No network connection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAlignment="center"

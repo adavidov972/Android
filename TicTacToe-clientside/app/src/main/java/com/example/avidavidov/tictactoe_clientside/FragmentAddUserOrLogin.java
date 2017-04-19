@@ -42,7 +42,6 @@ public class FragmentAddUserOrLogin extends DialogFragment {
     public String getUserName() {
         return userName;
     }
-
     public String getPassword() {
         return password;
     }

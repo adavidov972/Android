@@ -42,11 +42,21 @@
 
     <LinearLayout
         android:id="@+id/boardLayout"
+        android:layoutDirection="ltr"
         android:layout_width="300dp"
         android:layout_height="300dp"
         android:layout_gravity="center"
         android:background="@drawable/tictactoe_board"
         android:orientation="vertical" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/lblGameResult"
+        android:textAlignment="center"
+        android:textSize="30dp"
+        android:textStyle="bold"/>
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

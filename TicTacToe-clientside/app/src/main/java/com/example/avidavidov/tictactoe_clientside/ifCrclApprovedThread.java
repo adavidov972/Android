@@ -16,6 +16,8 @@ public class ifCrclApprovedThread extends Thread {
     private String userName, password;
     private int gameNumber;
     String result = "";
+    OnCrclApprovedListiner listiner;
+    boolean go = true;
 
 
     public ifCrclApprovedThread(String userName, String password, int gameNumber) {
@@ -25,58 +27,81 @@ public class ifCrclApprovedThread extends Thread {
     }
 
 
+    public void setListiner(OnCrclApprovedListiner listiner) {
+        this.listiner = listiner;
+    }
 
     @Override
     public void run() {
 
         InputStream inputStream = null;
         HttpURLConnection urlConnection = null;
+        int threadCounter = 0;
 
-        try {
+        while (go) {
 
-            URL url = new URL(MainActivity.BASE_URL + "?action=ifCrclApproved" + "&userName=" + userName + "&password=" + password
-                    + "&gameNumber=" + Integer.valueOf(gameNumber));
-            urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("GET");
-            urlConnection.setUseCaches(false);
-            urlConnection.connect();
-            inputStream = urlConnection.getInputStream();
-            byte[] buffer = new byte[32];
-            int actuallyRead;
-            while ((actuallyRead = inputStream.read(buffer)) != -1)
-                result = new String(buffer, 0, actuallyRead);
-            inputStream.close();
-            urlConnection.disconnect();
+            try {
 
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (inputStream != null)
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            if (urlConnection != null)
+                threadCounter++;
+                URL url = new URL(MainActivity.BASE_URL + "?action=ifCrclApproved" + "&userName=" + userName + "&password=" + password
+                        + "&gameNumber=" + gameNumber);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.setUseCaches(false);
+                urlConnection.connect();
+                inputStream = urlConnection.getInputStream();
+                byte[] buffer = new byte[32];
+                int actuallyRead;
+                while ((actuallyRead = inputStream.read(buffer)) != -1)
+                    result = new String(buffer, 0, actuallyRead);
+                inputStream.close();
                 urlConnection.disconnect();
+
+            } catch (ProtocolException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (result.equals("approved"))
+                listiner.onCrclApproved(gameNumber);
+
+            if (threadCounter == 30)
+                listiner.onCrclDismissedOrNotAnswering();
+
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                if (inputStream != null)
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                if (urlConnection != null)
+                    urlConnection.disconnect();
+            }
+
         }
     }
 
+    public void stopThread() {
+        go = false;
+    }
 
-    {
-        try {
-            int threadCounter = 0;
-            while (threadCounter < 31) {
-                Thread.sleep(1000);
-                threadCounter++;
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    public void startThread() {
+        go = true;
+    }
+
+    interface OnCrclApprovedListiner {
+
+        public void onCrclApproved(int gameNumber);
+        public void onCrclDismissedOrNotAnswering();
+
     }
 
 }

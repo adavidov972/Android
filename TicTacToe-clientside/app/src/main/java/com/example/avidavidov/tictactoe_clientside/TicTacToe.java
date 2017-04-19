@@ -7,6 +7,7 @@ package com.example.avidavidov.tictactoe_clientside;
 
 public class TicTacToe {
 
+    /*
     public enum CellValue {
         X, O, EMPTY
     }
@@ -81,5 +82,5 @@ public class TicTacToe {
         return isXturn;
     }
 
-
+*/
 }
