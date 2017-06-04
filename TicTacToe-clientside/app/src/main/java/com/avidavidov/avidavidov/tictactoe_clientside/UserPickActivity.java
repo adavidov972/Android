@@ -1,12 +1,8 @@
-package com.example.avidavidov.tictactoe_clientside;
+package com.avidavidov.avidavidov.tictactoe_clientside;
 
 import android.app.Activity;
 import android.app.FragmentManager;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -26,7 +22,7 @@ import java.util.List;
 
 
 public class UserPickActivity extends Activity implements CheckUserStatusThread.OnChangeUsersStatusListiner,
-        FragmentSomeonePickedYou.OnUserApprovedListiner, com.example.avidavidov.tictactoe_clientside.ifCrclApprovedThread.OnCrclApprovedListiner {
+        FragmentSomeonePickedYou.OnUserApprovedListiner, com.avidavidov.avidavidov.tictactoe_clientside.ifCrclApprovedThread.OnCrclApprovedListiner {
     private ListView usersListView;
     private UserListAdapter userAdapter;
     private List<Users> avalableUsers;

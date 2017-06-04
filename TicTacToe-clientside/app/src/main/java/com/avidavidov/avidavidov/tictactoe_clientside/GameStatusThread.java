@@ -1,4 +1,4 @@
-package com.example.avidavidov.tictactoe_clientside;
+package com.avidavidov.avidavidov.tictactoe_clientside;
 
 import java.io.IOException;
 import java.io.InputStream;

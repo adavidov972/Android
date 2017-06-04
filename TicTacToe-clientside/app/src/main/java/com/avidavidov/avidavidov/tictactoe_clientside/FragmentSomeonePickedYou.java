@@ -1,7 +1,6 @@
-package com.example.avidavidov.tictactoe_clientside;
+package com.avidavidov.avidavidov.tictactoe_clientside;
 
 import android.app.DialogFragment;
-import android.app.FragmentManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,7 +16,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.net.URLConnection;
 
 /**
  * Created by avi.davidov on 25/02/2017.
